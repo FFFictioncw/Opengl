@@ -1,14 +1,14 @@
+
+
 /*
-
 	Specification : display a hierarchical object with 3 parts : Robotic hand example in Lecture
-
 */
 
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
-
+#include <malloc.h>
 #include <gl/glut.h>
 
 //////////////////////////////////////////////////////////////////
@@ -21,20 +21,23 @@
 
 
 #define PI			3.141592654  // Prime
-#define WIN_POSX    500
-#define WIN_POSY    100
-#define WIN_WIDTH   500
-#define WIN_HEIGHT  700
+#define WIN_POSX    10
+#define WIN_POSY    10
+#define WIN_WIDTH   1500
+#define WIN_HEIGHT  1000
+#define REDISPLAYTIMERID 1
 
-
+GLuint texture_ground, texture_shadow;
+float width = 1024;
+int i = 0, j = 1;
 int    option;                   // specify whether the animation is uniform, accelerating or decelerating
 double exponent;                 // control the rate of change of acceleration/decleration
 double t_prev;                   // previous time elapsed
-int i = 0, j = 1;
-double  t1r, t2r, t3r, t4r, t5r, t6r, t7, t8, t9, t1l, t2l, t3l, t4l, t5l, t6l;			      // rotation angles of robot, lower-and-upper arm, upper arm respectivley
-GLUquadricObj *pObj1, *pObj2, *pObj3,*pObj7,*pObj8,*pObj9,*pObj10, *pObj11, *pObj12, *pObj4, *pObj5, *pObj6; //quadric objects to store properties of the quadric mesh
 
-//ËùÓĞÕıÁ¢·½ÌåµÄÔ­º¯Êı//
+double  t1r, t2r, t3r, t4r, t5r, t6r, t7, t8, t9,t10, t1l, t2l, t3l, t4l, t5l, t6l;			      // rotation angles of robot, lower-and-upper arm, upper arm respectivley
+GLUquadricObj *pObj1, *pObj2, *pObj3, *pObj7, *pObj8, *pObj9, *pObj10, *pObj11, *pObj12, *pObj4, *pObj5, *pObj6; //quadric objects to store properties of the quadric mesh
+
+//æ‰€æœ‰æ­£ç«‹æ–¹ä½“çš„åŸå‡½æ•°//
 
 void cube()
 // draw a standard 2 x 2 x 2 cube whose center is at (0, 1, 0)
@@ -52,7 +55,7 @@ void cube()
 }
 
 
-//Ò»£ºÏÈ»­Çû¸É£¬Á¢·½Ìå
+//ä¸€ï¼šå…ˆç”»èº¯å¹²ï¼Œç«‹æ–¹ä½“
 
 static const float vertex_list[][3] =
 {
@@ -66,9 +69,9 @@ static const float vertex_list[][3] =
 	40, 110, 30,
 };
 
-// ½«ÒªÊ¹ÓÃµÄ¶¥µãµÄĞòºÅ±£´æµ½Ò»¸öÊı×éÀïÃæ 
+// å°†è¦ä½¿ç”¨çš„é¡¶ç‚¹çš„åºå·ä¿å­˜åˆ°ä¸€ä¸ªæ•°ç»„é‡Œé¢ 
 
-static const GLint line_list[][2] =//2µãÈ·¶¨12ÌõÏß¶Î//
+static const GLint line_list[][2] =//2ç‚¹ç¡®å®š12æ¡çº¿æ®µ//
 {
 	{0, 1},
 	{2, 3},
@@ -84,29 +87,29 @@ static const GLint line_list[][2] =//2µãÈ·¶¨12ÌõÏß¶Î//
 	{2, 6}
 };
 
-static const GLint face_list[][4] =//4µãÈ·¶¨6¸öÃæ//
+static const GLint face_list[][4] =//4ç‚¹ç¡®å®š6ä¸ªé¢//
 {
 	{0, 1,3,2},
 	{2, 3,7,6},
 	{4, 5,0,1},
 	{6, 7,5,4},
 	{0, 2,6,4},
-	{1, 3,7,5},	
+	{1, 3,7,5},
 };
 
 
-// »æÖÆÁ¢·½Ìå
+// ç»˜åˆ¶ç«‹æ–¹ä½“
 
 void draw_torso(void)
 {
 	int m, n;
 
 	glBegin(GL_LINES);
-	glColor3f(1.0f, 1.5f, 1.5f);
-	for (m = 0; m < 12; ++m) // 12 ÌõÏß¶Î
+	glColor3f(1.0f, 1.0f, 1.0f);
+	for (m = 0; m < 12; ++m) // 12 æ¡çº¿æ®µ
 
 	{
-		for (n = 0; n < 2; ++n) // Ã¿ÌõÏß¶Î 2¸ö¶¥µã
+		for (n = 0; n < 2; ++n) // æ¯æ¡çº¿æ®µ 2ä¸ªé¡¶ç‚¹
 
 		{
 			glVertex3fv(vertex_list[line_list[m][n]]);
@@ -115,41 +118,27 @@ void draw_torso(void)
 	glEnd();
 
 	glBegin(GL_QUADS);
-	glColor3f(1.0f, 0.5f, 0.0f);
-	for (m = 0; m < 6; ++m) // 6¸öÃæ
+	glColor3f(1.0f, 1.0f, 1.0f);
+	for (m = 0; m < 6; ++m) // 6ä¸ªé¢
 
 	{
-		for (n = 0; n < 4; ++n) // Ã¿¸öÃæ 4¸ö¶¥µã
+		for (n = 0; n < 4; ++n) // æ¯ä¸ªé¢ 4ä¸ªé¡¶ç‚¹
 
 		{
 			glVertex3fv(vertex_list[face_list[m][n]]);
 		}
 	}
-	
+
 
 	glEnd();
 }
 
 
-	 //   ×÷Õß£ºbcbobo21cn
-		//À´Ô´£ºCSDN
-		//Ô­ÎÄ£ºhttps ://blog.csdn.net/bcbobo21cn/article/details/51058836 
-	 //   °æÈ¨ÉùÃ÷£º±¾ÎÄÎª²©Ö÷Ô­´´ÎÄÕÂ£¬×ªÔØÇë¸½ÉÏ²©ÎÄÁ´½Ó
 
 
+//äºŒï¼šç”»å³æ‰‹//
 
-
-
-
-
-
-
-
-
-
-//¶ş£º»­ÓÒÊÖ//
-
-//»­ÓÒ¼ç°òr=15,h=50//
+//ç”»å³è‚©è†€r=15,h=50//
 
 void draw_shouder(void)
 // draw base : blue cylinder of radius 15 height 40  x-z as base
@@ -157,7 +146,7 @@ void draw_shouder(void)
 	glPushMatrix();
 
 	glColor3f(0.0, 0.0, 1.0);
-	
+
 
 	// draws a hollow cylinder along the z axis with base on x-y axis, origin at (0, 0, 0) 
 	gluCylinder(pObj1, 15, 15, 50, 30, 30);
@@ -167,13 +156,13 @@ void draw_shouder(void)
 	// 10 x 10 controls the sampling
 
 	// draw a solid disk to cover the base 
-	
-	gluDisk(pObj2, 0, 15, 30, 30);//»­Ô²ÖùµÄÉÏÏÂµ×Ãæ
+
+	gluDisk(pObj2, 0, 15, 30, 30);//ç”»åœ†æŸ±çš„ä¸Šä¸‹åº•é¢
 	// draw a solid disk to cover the top
 	glPushMatrix();
 	glTranslatef(0, 0, 50);
 
-	gluDisk(pObj3, 0, 15, 30, 30);//10´ú±íÔ²ÓÉ10¸öµã×é³É
+	gluDisk(pObj3, 0, 15, 30, 30);//10ä»£è¡¨åœ†ç”±10ä¸ªç‚¹ç»„æˆ
 	glPopMatrix();
 
 	glPopMatrix();
@@ -195,8 +184,9 @@ void draw_upper_arm(void)
 	glScalef(12.0, 20.0, 12.0);
 	cube();
 	glPopMatrix();
-	
+
 }
+
 void draw_right_arm(void)
 {
 
@@ -238,23 +228,19 @@ void draw_left_arm(void)
 
 	draw_upper_arm();
 
-	
+
 }
 
 
 
 
-
-
-
-
-//Èı£º»­ÉÏ°ëÉíÌå//
+//ä¸‰ï¼šç”»ä¸ŠåŠèº«ä½“//
 
 
 void draw_neck(void)
-//»­²±×Ór=30, h=10//
+//ç”»è„–å­r=30, h=10//
 {
-	
+
 
 	glPushMatrix();
 
@@ -270,16 +256,15 @@ void draw_neck(void)
 
 	// draw a solid disk to cover the base 
 
-	/*gluDisk(pObj8, 0, 30, 100, 100);//»­Ô²ÖùµÄÉÏÏÂµ×Ãæ
+	/*gluDisk(pObj8, 0, 30, 100, 100);//ç”»åœ†æŸ±çš„ä¸Šä¸‹åº•é¢
 	// draw a solid disk to cover the top
 	glPushMatrix();
 	glTranslatef(0, 10, 0);
-
 	gluDisk(pObj9, 0, 30, 100, 100);//
 	glPopMatrix();*/
 
 	glPopMatrix();
-	
+
 }
 
 
@@ -291,7 +276,7 @@ void draw_head(void)
 
 	glRotatef(-90.0, 1.0, 0.0, 0.0);   // rotate about x axis by -90 deg.
 	// draws a hollow cylinder along the z axis with base on x-y axis, origin at (0, 0, 0) 
-	gluCylinder(pObj10, 40,40, 60, 100, 100);
+	gluCylinder(pObj10, 40, 40, 60, 100, 100);
 	// base radius 40  
 	// top  radius 40 
 	// height 80
@@ -299,7 +284,7 @@ void draw_head(void)
 
 	// draw a solid disk to cover the base 
 
-	gluDisk(pObj11, 0, 40, 100, 100);//»­Ô²ÖùµÄÉÏÏÂµ×Ãæ
+	gluDisk(pObj11, 0, 40, 100, 100);//ç”»åœ†æŸ±çš„ä¸Šä¸‹åº•é¢
 	// draw a solid disk to cover the top
 	glPushMatrix();
 	glTranslatef(0, 0, 60);
@@ -312,18 +297,17 @@ void draw_head(void)
 }
 
 
-
 void draw_uppper_body(void)
 {
 	draw_torso();
 
 	glPushMatrix();
-	
+
 	glTranslatef(0.0, 110.0, 0.0);
-		
+
 	draw_neck();
-    
-	glTranslatef(0.0, 5.0, 0.0); 
+
+	glTranslatef(0.0, 5.0, 0.0);
 	glRotatef(t7, 1.0, 0.0, 0.0);// rotate head by t7 degrees
 	draw_head();
 
@@ -350,24 +334,19 @@ void draw_uppper_body(void)
 
 	glPopMatrix();
 
-	
+
 }
 
 
 
-
-
-
-
-
-//ËÄ£º»­ñÉ²¿//
+//å››ï¼šç”»è£†éƒ¨//
 
 
 void draw_crotch(void)
 {
 	glPushMatrix();					// draw lower robotic arm : green box of dimension 10 x 40 x 40
 	glColor3f(0.0, 1.0, 0.0);
-	
+
 	glScalef(5.0, 20.0, 20.0);
 	glutSolidCube(2);
 	glPopMatrix();
@@ -376,25 +355,15 @@ void draw_crotch(void)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-//Îå£º»­ÓÒ½Å//
+//äº”ï¼šç”»å³è„š//
 
 void draw_leg(void)
 // draw base : blue cylinder of radius 30 height 40  x-z as base
 {
 	glPushMatrix();
 
-	glColor3f(0.0, 0.0, 1.0);
-	
+	glColor3f(0.0,0.0, 1.0);
+
 
 	// draws a hollow cylinder along the z axis with base on x-y axis, origin at (0, 0, 0) 
 	gluCylinder(pObj4, 20, 20, 40, 100, 100);
@@ -404,25 +373,25 @@ void draw_leg(void)
 	// 100 x 100 controls the sampling
 
 	// draw a solid disk to cover the base 
-	gluDisk(pObj5, 0, 20, 100, 100);//»­Ô²ÖùµÄÉÏÏÂµ×Ãæ
+	gluDisk(pObj5, 0, 20, 100, 100);//ç”»åœ†æŸ±çš„ä¸Šä¸‹åº•é¢
 
 	// draw a solid disk to cover the top
 	glPushMatrix();
 	glTranslatef(0, 0, 40);
 
-	gluDisk(pObj6, 0, 20, 100, 100);//100´ú±íÔ²ÓÉ100¸öµã×é³É
+	gluDisk(pObj6, 0, 20, 100, 100);//100ä»£è¡¨åœ†ç”±100ä¸ªç‚¹ç»„æˆ
 	glPopMatrix();
 
 	glPopMatrix();
 
-	
+
 
 }
 
 void draw_foot(void)
 {
 	glPushMatrix();					// draw lower robotic arm : green box of dimension 30 x 50+20 x 40
-	glColor3f(0.0, 1.0, 0.0);
+	glColor3f(0.0, 1.0, 1.0);
 	glTranslatef(0, 0, 20);
 	glScalef(15.0, 35.0, 15.0);
 	cube();
@@ -439,11 +408,11 @@ void draw_shoe(void)
 	glScalef(20.0, 5.0, 20.0);
 	cube();
 	glPopMatrix();
-	
+
 }
 
 void draw_right_leg(void)
-{ 
+{
 
 	glRotatef(t4r, 0.0, 0.0, 1.0);      // rotate the whole robot arm by t4 degrees
 
@@ -461,6 +430,7 @@ void draw_right_leg(void)
 
 
 }
+
 void draw_left_leg(void)
 {
 
@@ -479,57 +449,22 @@ void draw_left_leg(void)
 
 	draw_shoe();
 
-	
+
 }
 
 
-
-
-
-
-
-
-//Áù£º»­×îºóµÄ»úÆ÷ÈË//
+//å…­ï¼šç”»æœ€åçš„æœºå™¨äºº//
 
 
 void draw_robot(void)
+
 {
-
-	//////////////////////////////////////////////////////////////////
-	// 
-	// Setup perspective projection and the rotation
-	// 
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport); // viewport is by default the display window
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(45, double(viewport[2]) / viewport[3], 0.1, 1000);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(0, 0, 700, 0, 0, 0, 0, 1, 0);
-	glMultMatrixf(gsrc_getmo());  // get the rotation matrix from the rotation user-interface
-  //
-  //////////////////////////////////////////////////////////////////
-
-
-  /*  Enable Z buffer method for visibility determination. */
-  //  Z buffer code starts
-
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_DEPTH_TEST);
-
-	// Z buffer code ends */
-
-	glClearColor(1.0, 1.0, 1.0, 0.0);	// Set display-window color to white.
-	glClear(GL_COLOR_BUFFER_BIT);		// Clear display window.
-
-
 
 	glRotatef(t9, 0.0, 1.0, 0.0);
 
 	glPushMatrix();
 
-	glRotatef(t8, 1.0, 0.0, 0.0);   //t8ÊÇÍäÑüµÄ½Ç¶È
+	glRotatef(t8, 1.0, 0.0, 0.0);   //t8æ˜¯å¼¯è…°çš„è§’åº¦
 	draw_crotch();
 	glTranslatef(0.0, 20.0, 0.0);
 
@@ -550,61 +485,226 @@ void draw_robot(void)
 	draw_left_leg();
 	glPopMatrix();
 
+}
+
+//ä¸ƒï¼šç”»åœºæ™¯//
+
+GLuint texture_loading(const char* file_name)
+{
+	GLint width, height, total_bytes;
+	GLubyte* pixels = 0;
+	GLuint last_texture_ID = 0, texture_ID = 0;
+
+	FILE* bmpFile = fopen(file_name, "rb");
+	if (bmpFile == 0)
+		return 0;
+
+	fseek(bmpFile, 0x0012, SEEK_SET);
+	fread(&width, 4, 1, bmpFile);
+	fread(&height, 4, 1, bmpFile);
+	fseek(bmpFile, 54, SEEK_SET);
+
+	GLint line_bytes = width * 3;
+	while (line_bytes % 4 != 0)
+		++line_bytes;
+	total_bytes = line_bytes * height;
+
+	pixels = (GLubyte*)malloc(total_bytes);
+
+	if (pixels == 0)
+	{
+		fclose(bmpFile);
+		return 0;
+	}
+
+	if (fread(pixels, total_bytes, 1, bmpFile) <= 0)
+	{
+		free(pixels);
+		fclose(bmpFile);
+		return 0;
+	}
+
+	glGenTextures(1, &texture_ID);
+	if (texture_ID == 0)
+	{
+		free(pixels);
+		fclose(bmpFile);
+		return 0;
+	}
+
+	GLint lastTextureID = last_texture_ID;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastTextureID);
+	glBindTexture(GL_TEXTURE_2D, texture_ID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+		GL_BGR_EXT, GL_UNSIGNED_BYTE, pixels);
+	glBindTexture(GL_TEXTURE_2D, lastTextureID);
+	free(pixels);
+	fclose(bmpFile);
+	return texture_ID;
+
+}
+
+void draw_ground(void)
+{
+	
+	glBindTexture(GL_TEXTURE_2D, texture_ground);
+
+	glEnable(GL_TEXTURE_2D);
+	// assign the full range of texture colors to a quadrilateral
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0); glVertex3f(-2 * width, 0, -width);
+	glTexCoord2f(1.0, 0.0); glVertex3f(2 * width, 0, - width);
+	glTexCoord2f(1.0, 1.0); glVertex3f(2 * width, 0, width);
+	glTexCoord2f(0.0, 1.0); glVertex3f(-2 * width, 0, width);
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+	
+}
+
+void draw_light() {
+	glEnable(GL_LIGHTING); // activate lighting routines
+	GLfloat lightAmbient[] = { 1, 0.5, 0.5, 1 };  //ç¯å¢ƒå…‰å‚æ•°
+	GLfloat lightDiffuse[] = { 1, 1, 1, 1 };  //æ¼«æ•£å…‰å‚æ•°
+	GLfloat lightSpecular[] = { 1, 1, 1, 1 }; //é•œé¢åå°„å‚æ•°
+	GLfloat lightPosition[] = { 0, 500, 0, 1 }; //å…‰æºä½ç½®,å±€éƒ¨å…‰æº
+
+	glLightfv(GL_LIGHT1, GL_AMBIENT, lightAmbient);     //è®¾ç½®ç¯å¢ƒå…‰
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, lightDiffuse);     //è®¾ç½®æ¼«å°„å…‰
+	glLightfv(GL_LIGHT1, GL_SPECULAR, lightSpecular);   //é•œé¢åå°„å
+	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition);   //è®¾ç½®å…‰æºä½ç½®
+	glEnable(GL_LIGHT1);                                //å¯åŠ¨ä¸€å·å…‰æº
+	
+}
+void draw_shadow() {
+
+	
+	GLfloat shadowcolour[] = { 0.0,0.0,0.0 };
+	GLfloat M[16]; // OpenGL is in column major format
+// though C is in row major format
+	for (int i = 0; i < 16; i++) {
+		M[i] = 1;
+	}
+	M[0] = M[5] = M[10] = 1;
+	M[7] = -1.0 / 500;
+
+	
+	glPushMatrix(); // save state
+	glMatrixMode(GL_MODELVIEW);
+	glTranslatef(0, 500,0); // Mwc â† s
+	glMultMatrixf(M); // perspective project
+	glTranslatef(0, -500, 0); // Ms â† wc
+	
+	glColor3fv(shadowcolour); // set ğ‘˜ğ‘˜ ğ‘ğ‘ = ğ‘˜ğ‘˜ ğ‘‘ğ‘‘ = ğ‘˜ğ‘˜ ğ‘ ğ‘  = 0 if you are using lighting model
+	
+	draw_robot();
+
+	glPopMatrix();
+
+}
+
+//å…«ï¼šç”»æœ€åçš„ç»“æœ//
+
+void draw_display(void)
+{
+	//////////////////////////////////////////////////////////////////
+	// 
+	// Setup perspective projection and the rotation
+	// 
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport); // viewport is by default the display window
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45, double(viewport[2]) / viewport[3], 0.1, 100000);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(0, 2000, 2500, 0, 0, 256, 0, 1, 0);
+	glMultMatrixf(gsrc_getmo());  // get the rotation matrix from the rotation user-interface
+  //
+  //////////////////////////////////////////////////////////////////
+
+
+  /*  Enable Z buffer method for visibility determination. */
+  //  Z buffer code starts
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+
+	// Z buffer code ends */
+	glClearColor(1.0, 1.0, 1.0, 0.0);	// Set display-window color to white.
+	glClear(GL_COLOR_BUFFER_BIT);		// Clear display window.
+
+	draw_light();
+	draw_ground();
+	glRotatef(t10, 0.0, 1.0, 0.0);
+	glPushMatrix();
+	glTranslatef(512, 80, 0);
+	draw_robot();
+	glPopMatrix();
+	
+
+	draw_shadow();
+ 
 	glutSwapBuffers();
 }
 
-void animate(void)
-// this animation function will swing theta from 0 deg. to 90 deg. in 1 seconds, then stop at 90 deg.
+
+
+//ä¹ï¼šç”»åŠ¨ç”»//
+void timerFunc(int nTimerID)
 {
-	
-
-	double t;
-	double t1 = 45;                  // 90 degrees
-	double loop_time = 2000.0;				 // 1000 ms
-
-				// return elapsed time in ms since the last call  
-
-
-			/*t1 = -t1 / 2 + t1 * t / swing_time;
-			t3 = -t3 / 2 + t3 * t / swing_time;*/
-
-	t = glutGet(GLUT_ELAPSED_TIME);
-	if (t - i > loop_time)
+	switch (nTimerID)
 	{
-		i = i + loop_time;
+	case REDISPLAYTIMERID:
+		i = i + j;
+		t2r = t2l = 15;
+		t9 += 0;
+		t10 -= 1.8;
+
+		if (i > -11 && i < 10)
+		{
+
+			t1r = t1l = 5 * i;
+			if (i > 0)
+			{
+				t3l = 5 * i;
+				t9 = 5;
+				t3r = 0;
+			}
+			else
+			{
+				t3r = 5 * i;
+				t9 = -5;
+				t3l = 0;
+
+			}
+
+			t5r = t5l = 5 * i;
+			t6r = t6l = 5 * i;
+		}
+		else
+		{
+			j = -j;
+
+		}
+		glutPostRedisplay();
+		glutTimerFunc(100, timerFunc, REDISPLAYTIMERID);
+		break;
 	}
-
-	if (sin(PI * t / (loop_time)) >= 0)
-	{
-		t1r = t1l = -t1 + 2 * t1 * pow(sin(PI * (t - i) / (2 * loop_time)), 0.8);//0.8¸üÂıÒ»µã
-		t5r = t5l = -t1 + 2 * t1 * pow(sin(PI * (t - i) / (2 * loop_time)), 0.8);//0.7¸üÂıÒ»µã
-		t3r = t3l = -t1 + 2 * t1 * pow(sin(PI * (t - i) / (2 * loop_time)), 0.5);//0.5¸ü¿ìÒ»µã
-		/*t1 = -t1 + 2 * t1 * (1 - pow(cos(PI * (t - t_in_loop) / (2 * loop_time)), 0.8));
-		t3 = -t3 + 2 * t3 * (1 - pow(cos(PI * (t - t_in_loop) / (2 * loop_time)), 0.8));*/
-	}
-
-	if (sin(PI * t / (loop_time)) < 0)
-	{
-		/*t1 = t1 - 2 * t1 * pow(sin(PI * (t - t_in_loop) / (2 * loop_time)), 0.8);
-		t3 = t3 - 2 * t3 * pow(sin(PI * (t - t_in_loop) / (2 * loop_time)), 0.8);*/
-		t1r = t1l = t1 - 2 * t1 * (1 - pow(cos(PI * (t - i) / (2 * loop_time)), 0.8));
-		t5r = t5l = t1 - 2 * t1 * (1 - pow(cos(PI * (t - i) / (2 * loop_time)), 0.8));//0.7¸üÂıÒ»µã
-		t3r = t3l = t1 - 2 * t1 * (1 - pow(cos(PI * (t - i) / (2 * loop_time)), 0.5));
-	}
-
-	t9 += 0.1;
-	if (t9 > 360) t9 -= 360;
-
-	glutPostRedisplay();
 }
 
 void drawing(GLubyte key, GLint xMouse, GLint yMouse)
 {
+	int i = 0, j = 1;
 
 	/* simple animation can be achieved by repeating key tabs */
 
 	switch (key) {
-	case '0':		t1r = t2r = t3r = t4r = t5r = t6r = t7 = t8 = t9= t1l = t2l = t3l = t4l = t5l = t6l = 0;
+	case '0':		t1r = t2r = t3r = t4r = t5r = t6r = t7 = t8 = t9 = t1l = t2l = t3l = t4l = t5l = t6l = 0;
 		break;
 	case '1':		t1r = t1l += 30;
 		break;
@@ -627,30 +727,30 @@ void drawing(GLubyte key, GLint xMouse, GLint yMouse)
 	case 'w':
 		i = i + j;
 		t2r = t2l = 10;
-		t9 += 1 ;
+		t9 += 1;
 		if (i > -10 && i < 10)
 		{
 
 			t1r = t1l = 5 * i;
 			if (i > 0)
 			{
-			t3l = 5 * i;
-			t3r = 0;
-           }
-		else
-		{
-			t3r= 5 * i;
-			t3l = 0;
-			
-		}
+				t3l = 5 * i;
+				t3r = 0;
+			}
+			else
+			{
+				t3r = 5 * i;
+				t3l = 0;
+
+			}
 
 			t5r = t5l = 5 * i;
 			t6r = t6l = 5 * i;
 		}
-		else 
+		else
 		{
 			j = -j;
-		
+
 		}
 		break;
 
@@ -704,17 +804,20 @@ void main(int argc, char** argv)
 
 	glutCreateWindow("Robot");					  // Create display window.
 
-	t1r = t1l = 0;  t2r = t2l = 0;  t3r = t3l = 0; t7 = t8 =t9=0;
+	texture_ground = texture_loading("ground.bmp");
+	texture_shadow = texture_loading("black.bmp");
+
+	t1r = t1l =0;  t2r = t2l = 0;  t3r = t3l = 0; t4r = t4l = 0; t6r = t6l = 0; t7 = t8 = t9 =t10= 0;
 
 	pObj1 = gluNewQuadric();
 	pObj2 = gluNewQuadric();
 	pObj3 = gluNewQuadric();
 	pObj4 = gluNewQuadric();
 	pObj5 = gluNewQuadric();
-	pObj6 = gluNewQuadric(); 
+	pObj6 = gluNewQuadric();
 	pObj7 = gluNewQuadric();
 	pObj8 = gluNewQuadric();
-	pObj9 = gluNewQuadric(); 
+	pObj9 = gluNewQuadric();
 	pObj10 = gluNewQuadric();
 	pObj11 = gluNewQuadric();
 	pObj12 = gluNewQuadric();
@@ -734,7 +837,6 @@ void main(int argc, char** argv)
 	//printf("r : the robot can run                \n");
 	//glutKeyboardFunc(drawing);
 
-
 	////////////////////////////////////////////////////////////////////
 	//// 
 	//// Register mouse-click and mouse-move glut callback functions
@@ -745,11 +847,9 @@ void main(int argc, char** argv)
 	////
 	////////////////////////////////////////////////////////////////////
 
-
-	glutDisplayFunc(draw_robot);   // put everything you wish to draw in drawscene
-
-	glutIdleFunc(animate);
-
+	glutDisplayFunc(draw_display);   // put everything you wish to draw in drawscene
+	
+	glutTimerFunc(100, timerFunc, REDISPLAYTIMERID);
 	glutMainLoop();
 
 }
