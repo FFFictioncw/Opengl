@@ -26,7 +26,7 @@
 #define REDISPLAYTIMERID 1
 
 GLuint texture_ground, texture_shadow;
-float width = 1024;
+float width = 2048;
 int i = 0, j = 1;
 int    option;                   // specify whether the animation is uniform, accelerating or decelerating
 double exponent;                 // control the rate of change of acceleration/decleration
@@ -103,11 +103,7 @@ void draw_torso(void)
 	int m, n;
 
 	glBegin(GL_LINES);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	float head[] = { 1.0, 1.0, 1.0,1.0 };
-	glMaterialfv(GL_FRONT, GL_AMBIENT, head);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, head);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, head);
+	
 	for (m = 0; m < 12; ++m) // 12 条线段
 
 	{
@@ -120,11 +116,7 @@ void draw_torso(void)
 	glEnd();
 
 	glBegin(GL_QUADS);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	float head1[] = { 1.0, 1.0, 1.0,1.0 };
-	glMaterialfv(GL_FRONT, GL_AMBIENT, head1);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, head1);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, head1);
+	
 	for (m = 0; m < 6; ++m) // 6个面
 
 	{
@@ -152,6 +144,8 @@ void draw_shouder(void)
 	glPushMatrix();
 
 	glColor3f(0.0, 0.0, 1.0);
+	
+	
 
 
 	// draws a hollow cylinder along the z axis with base on x-y axis, origin at (0, 0, 0) 
@@ -352,7 +346,7 @@ void draw_crotch(void)
 {
 	glPushMatrix();					// draw lower robotic arm : green box of dimension 10 x 40 x 40
 	glColor3f(0.0, 1.0, 0.0);
-
+	
 	glScalef(5.0, 20.0, 20.0);
 	glutSolidCube(2);
 	glPopMatrix();
@@ -369,8 +363,7 @@ void draw_leg(void)
 	glPushMatrix();
 
 	glColor3f(0.0, 0.0, 1.0);
-
-
+	
 	// draws a hollow cylinder along the z axis with base on x-y axis, origin at (0, 0, 0) 
 	gluCylinder(pObj4, 20, 20, 40, 100, 100);
 	// base radius 20  
@@ -465,6 +458,37 @@ void draw_left_leg(void)
 void draw_robot(void)
 
 {
+
+	glRotatef(t9, 0.0, 1.0, 0.0);
+
+	glPushMatrix();
+
+	glRotatef(t8, 1.0, 0.0, 0.0);   //t8是弯腰的角度
+	draw_crotch();
+	glTranslatef(0.0, 20.0, 0.0);
+
+	draw_uppper_body();
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(-45.0, 0.0, 0.0);
+	glRotatef(90, 0.0, 1.0, 0.0);
+	glRotatef(-180, 0.0, 0.0, 1.0);
+	draw_right_leg();
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(5.0, 0.0, 0.0);
+	glRotatef(90, 0.0, 1.0, 0.0);
+	glRotatef(-180, 0.0, 0.0, 1.0);
+	draw_left_leg();
+	glPopMatrix();
+
+}
+void draw_robot2(void)
+
+{
+
 
 	glRotatef(t9, 0.0, 1.0, 0.0);
 
@@ -596,7 +620,7 @@ void draw_shadow() {
 		M[i] = 0;
 	}
 	M[0] = M[5] = M[10] = 1;
-	M[7] = -1.0 / 1000;
+	M[7] = -1.0 / 990;
 
 	glDisable(GL_LIGHT1);
 	glPushMatrix(); // save state
@@ -606,6 +630,7 @@ void draw_shadow() {
 	glTranslatef(0, -1000, 0); // Ms ← wc
 
 	glColor3fv(shadowcolour); // set 𝑘𝑘 𝑎𝑎 = 𝑘𝑘 𝑑𝑑 = 𝑘𝑘 𝑠𝑠 = 0 if you are using lighting model
+
 	glTranslatef(512, 80, 0);
 	draw_robot();
 
@@ -628,7 +653,7 @@ void draw_display(void)
 	gluPerspective(45, double(viewport[2]) / viewport[3], 0.1, 100000);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluLookAt(0, 2000, 2500, 0, 0, 256, 0, 1, 0);
+	gluLookAt(0, 1000, 1500, 0, 0, 256, 0, 1, 0);
 	glMultMatrixf(gsrc_getmo());  // get the rotation matrix from the rotation user-interface
   //
   //////////////////////////////////////////////////////////////////
@@ -649,6 +674,8 @@ void draw_display(void)
 	glRotatef(t10, 0.0, 1.0, 0.0);
 	glPushMatrix();
 	glTranslatef(512, 80, 0);
+	glEnable(GL_COLOR_MATERIAL);
+	
 	draw_robot();
 	glPopMatrix();
 
@@ -690,7 +717,7 @@ void timerFunc(int nTimerID)
 			}
 
 			t5r = t5l = 5 * i;
-			t6r = t6l = 5 * i;
+			t6r = t6l = -5 * i;
 		}
 		else
 		{
@@ -856,6 +883,7 @@ void main(int argc, char** argv)
 	glutDisplayFunc(draw_display);   // put everything you wish to draw in drawscene
 
 	glutTimerFunc(100, timerFunc, REDISPLAYTIMERID);
+
 	glutMainLoop();
 
 }
