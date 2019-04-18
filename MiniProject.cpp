@@ -1,5 +1,3 @@
-
-
 /*
 	Specification : display a hierarchical object with 3 parts : Robotic hand example in Lecture
 */
@@ -34,7 +32,7 @@ int    option;                   // specify whether the animation is uniform, ac
 double exponent;                 // control the rate of change of acceleration/decleration
 double t_prev;                   // previous time elapsed
 
-double  t1r, t2r, t3r, t4r, t5r, t6r, t7, t8, t9,t10, t1l, t2l, t3l, t4l, t5l, t6l;			      // rotation angles of robot, lower-and-upper arm, upper arm respectivley
+double  t1r, t2r, t3r, t4r, t5r, t6r, t7, t8, t9, t10, t1l, t2l, t3l, t4l, t5l, t6l;			      // rotation angles of robot, lower-and-upper arm, upper arm respectivley
 GLUquadricObj *pObj1, *pObj2, *pObj3, *pObj7, *pObj8, *pObj9, *pObj10, *pObj11, *pObj12, *pObj4, *pObj5, *pObj6; //quadric objects to store properties of the quadric mesh
 
 //所有正立方体的原函数//
@@ -106,6 +104,10 @@ void draw_torso(void)
 
 	glBegin(GL_LINES);
 	glColor3f(1.0f, 1.0f, 1.0f);
+	float head[] = { 1.0, 1.0, 1.0,1.0 };
+	glMaterialfv(GL_FRONT, GL_AMBIENT, head);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, head);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, head);
 	for (m = 0; m < 12; ++m) // 12 条线段
 
 	{
@@ -119,6 +121,10 @@ void draw_torso(void)
 
 	glBegin(GL_QUADS);
 	glColor3f(1.0f, 1.0f, 1.0f);
+	float head1[] = { 1.0, 1.0, 1.0,1.0 };
+	glMaterialfv(GL_FRONT, GL_AMBIENT, head1);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, head1);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, head1);
 	for (m = 0; m < 6; ++m) // 6个面
 
 	{
@@ -362,7 +368,7 @@ void draw_leg(void)
 {
 	glPushMatrix();
 
-	glColor3f(0.0,0.0, 1.0);
+	glColor3f(0.0, 0.0, 1.0);
 
 
 	// draws a hollow cylinder along the z axis with base on x-y axis, origin at (0, 0, 0) 
@@ -551,19 +557,19 @@ GLuint texture_loading(const char* file_name)
 
 void draw_ground(void)
 {
-	
+
 	glBindTexture(GL_TEXTURE_2D, texture_ground);
 
 	glEnable(GL_TEXTURE_2D);
 	// assign the full range of texture colors to a quadrilateral
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0, 0.0); glVertex3f(-2 * width, 0, -width);
-	glTexCoord2f(1.0, 0.0); glVertex3f(2 * width, 0, - width);
+	glTexCoord2f(1.0, 0.0); glVertex3f(2 * width, 0, -width);
 	glTexCoord2f(1.0, 1.0); glVertex3f(2 * width, 0, width);
 	glTexCoord2f(0.0, 1.0); glVertex3f(-2 * width, 0, width);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
-	
+
 }
 
 void draw_light() {
@@ -571,36 +577,36 @@ void draw_light() {
 	GLfloat lightAmbient[] = { 1, 0.5, 0.5, 1 };  //环境光参数
 	GLfloat lightDiffuse[] = { 1, 1, 1, 1 };  //漫散光参数
 	GLfloat lightSpecular[] = { 1, 1, 1, 1 }; //镜面反射参数
-	GLfloat lightPosition[] = { 0, 500, 0, 1 }; //光源位置,局部光源
+	GLfloat lightPosition[] = { 0, 1000, 0, 1 }; //光源位置,局部光源
 
 	glLightfv(GL_LIGHT1, GL_AMBIENT, lightAmbient);     //设置环境光
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, lightDiffuse);     //设置漫射光
 	glLightfv(GL_LIGHT1, GL_SPECULAR, lightSpecular);   //镜面反射后
 	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition);   //设置光源位置
 	glEnable(GL_LIGHT1);                                //启动一号光源
-	
+
 }
 void draw_shadow() {
 
-	
+
 	GLfloat shadowcolour[] = { 0.0,0.0,0.0 };
 	GLfloat M[16]; // OpenGL is in column major format
 // though C is in row major format
 	for (int i = 0; i < 16; i++) {
-		M[i] = 1;
+		M[i] = 0;
 	}
 	M[0] = M[5] = M[10] = 1;
-	M[7] = -1.0 / 500;
+	M[7] = -1.0 / 1000;
 
-	
+	glDisable(GL_LIGHT1);
 	glPushMatrix(); // save state
 	glMatrixMode(GL_MODELVIEW);
-	glTranslatef(0, 500,0); // Mwc ← s
+	glTranslatef(0, 1000, 0); // Mwc ← s
 	glMultMatrixf(M); // perspective project
-	glTranslatef(0, -500, 0); // Ms ← wc
-	
+	glTranslatef(0, -1000, 0); // Ms ← wc
+
 	glColor3fv(shadowcolour); // set 𝑘𝑘 𝑎𝑎 = 𝑘𝑘 𝑑𝑑 = 𝑘𝑘 𝑠𝑠 = 0 if you are using lighting model
-	
+	glTranslatef(512, 80, 0);
 	draw_robot();
 
 	glPopMatrix();
@@ -645,10 +651,10 @@ void draw_display(void)
 	glTranslatef(512, 80, 0);
 	draw_robot();
 	glPopMatrix();
-	
+
 
 	draw_shadow();
- 
+
 	glutSwapBuffers();
 }
 
@@ -807,7 +813,7 @@ void main(int argc, char** argv)
 	texture_ground = texture_loading("ground.bmp");
 	texture_shadow = texture_loading("black.bmp");
 
-	t1r = t1l =0;  t2r = t2l = 0;  t3r = t3l = 0; t4r = t4l = 0; t6r = t6l = 0; t7 = t8 = t9 =t10= 0;
+	t1r = t1l = 0;  t2r = t2l = 0;  t3r = t3l = 0; t4r = t4l = 0; t6r = t6l = 0; t7 = t8 = t9 = t10 = 0;
 
 	pObj1 = gluNewQuadric();
 	pObj2 = gluNewQuadric();
@@ -848,7 +854,7 @@ void main(int argc, char** argv)
 	////////////////////////////////////////////////////////////////////
 
 	glutDisplayFunc(draw_display);   // put everything you wish to draw in drawscene
-	
+
 	glutTimerFunc(100, timerFunc, REDISPLAYTIMERID);
 	glutMainLoop();
 
